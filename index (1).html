@@ -1,844 +1,460 @@
-import React, { useMemo, useState } from "react";
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VIKI — Telegram-native AI Platform (Mock)</title>
 
-// Single-file, self-contained UI mock for VIKI user interface.
-// Тёмная тема + неоновые акценты. РАСКЛАДКА ПРИВЕДЕНА К СКРИНШОТАМ:
-// 1) Левое меню (sticky),
-// 2) Основной контент справа в карточке,
-// 3) Блок «Активный проект» вынесен ВНИЗ страницы на всю ширину контейнера,
-// 4) В нужных разделах добавлены кнопки в шапке секций (Проекты/Агенты/База знаний).
+    <!-- Tailwind via CDN (для быстрого предпросмотра) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {},
+            boxShadow: {},
+          },
+        },
+      };
+    </script>
 
-// ————————————————————————————————————————————————————————————
-// Helper mini-components
-function Icon({ name, className = "w-5 h-5" }) {
-  const stroke = "currentColor";
-  const common = { fill: "none", stroke, strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" };
-  switch (name) {
-    case "logo":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M4 12a8 8 0 1016 0A8 8 0 104 12z" />
-          <path d="M8 12h8M12 8v8" />
-        </svg>
-      );
-    case "project":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M3 7h18M7 3h10M5 7v12a2 2 0 002 2h10a2 2 0 002-2V7" />
-        </svg>
-      );
-    case "agent":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M12 14a5 5 0 100-10 5 5 0 000 10z" />
-          <path d="M4 21a8 8 0 0116 0" />
-        </svg>
-      );
-    case "kb":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M4 5h12a4 4 0 014 4v10H8a4 4 0 01-4-4V5z" />
-          <path d="M8 5v10a4 4 0 004 4" />
-        </svg>
-      );
-    case "contacts":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M7 8h10M7 12h8M7 16h6" />
-          <path d="M4 4h16v16H4z" />
-        </svg>
-      );
-    case "funnel":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M3 4h18l-6 7v6l-6 3V11L3 4z" />
-        </svg>
-      );
-    case "chat":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M21 12a8 8 0 11-3.2-6.4L21 5l-.6 3.2A7.96 7.96 0 0121 12z" />
-          <path d="M7 17l-3 3 .8-4.2" />
-        </svg>
-      );
-    case "crm":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M4 6h16M4 12h10M4 18h7" />
-          <path d="M16 11l4 4-4 4" />
-        </svg>
-      );
-    case "analytics":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M4 20h16M7 10v7M12 7v10M17 13v4" />
-        </svg>
-      );
-    case "autopilot":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M12 3l3 6 6 .9-4.5 4.4 1 6.4L12 18l-5.5 2.7 1-6.4L3 9.9 9 9l3-6z" />
-        </svg>
-      );
-    case "settings":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}>
-          <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V22a2 2 0 01-4 0v-.11a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 010-4h.11c.66 0 1.26-.39 1.51-1z" />
-        </svg>
-      );
-    case "play":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5l11 7-11 7V5z"/></svg>
-      );
-    case "pause":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
-      );
-    case "check":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 13l4 4L19 7"/></svg>
-      );
-    case "warning":
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...common}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-      );
-    default:
-      return null;
-  }
-}
+    <!-- React 18 UMD + Babel (для JSX в браузере) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-function Badge({ children, color = "slate" }) {
-  const map = {
-    slate: "bg-slate-800/60 text-slate-200 border-slate-700",
-    green: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",
-    yellow: "bg-amber-500/15 text-amber-300 border-amber-400/20",
-    red: "bg-rose-500/15 text-rose-300 border-rose-400/20",
-    blue: "bg-sky-500/15 text-sky-300 border-sky-400/20",
-    violet: "bg-violet-500/15 text-violet-300 border-violet-400/20",
-  };
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${map[color]}`}>
-      {children}
-    </span>
-  );
-}
+    <style>
+      html, body { height: 100%; }
+      /* Слегка сгладим фон, чтобы он был ближе к вашим макетам */
+      .app-bg {
+        background: linear-gradient(135deg, #0b1220 0%, #0f172a 45%, #111827 100%);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen app-bg text-slate-100">
+    <div id="root"></div>
 
-function Card({ title, subtitle, right, children, className = "" }) {
-  return (
-    <div className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-none ${className}`}>
-      {(title || right) && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
-            {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
-          </div>
-          <div className="flex items-center gap-2">{right}</div>
-        </div>
-      )}
-      <div className={title ? "p-4" : "p-4"}>{children}</div>
-    </div>
-  );
-}
+    <script type="text/babel">
+      // ---------------- Helper mini-components ----------------
+      const { useMemo, useState } = React;
 
-function Button({ children, onClick, variant = "primary", size = "md", className = "", disabled }) {
-  const v = {
-    primary: "bg-indigo-500 text-white hover:bg-indigo-400",
-    ghost: "bg-transparent text-slate-200 hover:bg-slate-800",
-    outline: "bg-transparent text-slate-100 border border-slate-700 hover:bg-slate-800",
-    danger: "bg-rose-600 text-white hover:bg-rose-500",
-    success: "bg-emerald-600 text-white hover:bg-emerald-500",
-  };
-  const s = { sm: "px-3 py-1.5 text-sm rounded-xl", md: "px-3.5 py-2 text-sm rounded-xl", lg: "px-4 py-2.5 text-base rounded-2xl" };
-  return (
-    <button onClick={onClick} disabled={disabled} className={`${v[variant]} ${s[size]} transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}>
-      {children}
-    </button>
-  );
-}
+      function Icon({ name, className = "w-5 h-5" }) {
+        const stroke = "currentColor";
+        const common = { fill: "none", stroke, strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" };
+        switch (name) {
+          case "logo":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M4 12a8 8 0 1016 0A8 8 0 104 12z" />
+                <path d="M8 12h8M12 8v8" />
+              </svg>
+            );
+          case "project":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M3 7h18M7 3h10M5 7v12a2 2 0 002 2h10a2 2 0 002-2V7" />
+              </svg>
+            );
+          case "agent":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M12 14a5 5 0 100-10 5 5 0 000 10z" />
+                <path d="M4 21a8 8 0 0116 0" />
+              </svg>
+            );
+          case "kb":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M4 5h12a4 4 0 014 4v10H8a4 4 0 01-4-4V5z" />
+                <path d="M8 5v10a4 4 0 004 4" />
+              </svg>
+            );
+          case "contacts":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M7 8h10M7 12h8M7 16h6" />
+                <path d="M4 4h16v16H4z" />
+              </svg>
+            );
+          case "funnel":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M3 4h18l-6 7v6l-6 3V11L3 4z" />
+              </svg>
+            );
+          case "chat":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M21 12a8 8 0 11-3.2-6.4L21 5l-.6 3.2A7.96 7.96 0 0121 12z" />
+                <path d="M7 17l-3 3 .8-4.2" />
+              </svg>
+            );
+          case "crm":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M4 6h16M4 12h10M4 18h7" />
+                <path d="M16 11l4 4-4 4" />
+              </svg>
+            );
+          case "analytics":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M4 20h16M7 10v7M12 7v10M17 13v4" />
+              </svg>
+            );
+          case "autopilot":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M12 3l3 6 6 .9-4.5 4.4 1 6.4L12 18l-5.5 2.7 1-6.4L3 9.9 9 9l3-6z" />
+              </svg>
+            );
+          case "settings":
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V22a2 2 0 01-4 0v-.11a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 010-4h.11c.66 0 1.26-.39 1.51-1z" />
+              </svg>
+            );
+          case "play":
+            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5l11 7-11 7V5z"/></svg>;
+          case "pause":
+            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>;
+          case "check":
+            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 13l4 4L19 7"/></svg>;
+          case "warning":
+            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
+          default:
+            return null;
+        }
+      }
 
-function Toggle({ checked, onChange }) {
-  return (
-    <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all ${checked ? "bg-emerald-500" : "bg-slate-600"} relative`}>
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-all ${checked ? "translate-x-5" : ""}`} />
-    </button>
-  );
-}
+      function Badge({ children, color = "slate" }) {
+        const map = {
+          slate: "bg-slate-800/60 text-slate-200 border-slate-700",
+          green: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",
+          yellow: "bg-amber-500/15 text-amber-300 border-amber-400/20",
+          red: "bg-rose-500/15 text-rose-300 border-rose-400/20",
+          blue: "bg-sky-500/15 text-sky-300 border-sky-400/20",
+          violet: "bg-violet-500/15 text-violet-300 border-violet-400/20",
+        };
+        return (
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${map[color]}`}>
+            {children}
+          </span>
+        );
+      }
 
-function Field({ label, hint, children, required }) {
-  return (
-    <label className="block">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-200">{label}{required && <span className="text-rose-400">*</span>}</span>
-        {hint && <span className="text-xs text-slate-500">{hint}</span>}
-      </div>
-      <div className="mt-1.5">{children}</div>
-    </label>
-  );
-}
-
-// ————————————————————————————————————————————————————————————
-// Mock data
-const MOCK_AGENTS = [
-  { id: "agent_001", username: "@promo_agent_01", status: "active", warm: 0.91, geo: "KZ", messagesToday: 437, flood: false },
-  { id: "agent_002", username: "@promo_agent_02", status: "cooldown", warm: 0.72, geo: "RU", messagesToday: 188, flood: true },
-  { id: "agent_003", username: "@sales_maria", status: "paused", warm: 0.83, geo: "TR", messagesToday: 0, flood: false },
-];
-
-const MOCK_CONTACT_BASES = [
-  { id: "base_main", name: "Активная база: Лиды Май", size: 18240, status: "active" },
-  { id: "base_webinar", name: "Вебинар Апрель (архив)", size: 5320, status: "archived" },
-];
-
-const MOCK_PROJECTS = [
-  {
-    id: "proj_001",
-    name: "Продажа кухонь",
-    status: "active",
-    agentIds: ["agent_001"],
-    funnelId: "funnel_kitchen",
-    kbId: "kb_main",
-    activeContactBaseId: "base_main",
-    autoOptimize: false,
-    kpi: { conv: 0.064, reply: 0.41, ctr: 0.23 },
-  },
-  {
-    id: "proj_002",
-    name: "Рекрутинг курьеров",
-    status: "paused",
-    agentIds: ["agent_002"],
-    funnelId: "funnel_hr",
-    kbId: "kb_hr",
-    activeContactBaseId: "base_main",
-    autoOptimize: true,
-    kpi: { conv: 0.028, reply: 0.36, ctr: 0.19 },
-  },
-];
-
-// ————————————————————————————————————————————————————————————
-// Views (раскладка как на скриншотах)
-function ProjectsView({ projects, onOpenWizard, onToggleProject, onOpenProject }) {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card
-        title="Проекты"
-        subtitle="Интерфейс пользователя VIKI"
-        right={<Button onClick={onOpenWizard}>+ Новый проект</Button>}
-        className="xl:col-span-2"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {projects.map((p) => (
-            <div key={p.id} className="rounded-xl border border-slate-800 p-3 hover:bg-slate-900 transition" onClick={() => onOpenProject(p)}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon name="project" />
-                  <div>
-                    <div className="font-medium text-slate-100">{p.name}</div>
-                    <div className="text-xs text-slate-400">Funnel: <span className="font-mono text-slate-300">{p.funnelId}</span></div>
-                  </div>
+      function Card({ title, subtitle, right, children, className = "" }) {
+        return (
+          <div className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-none ${className}`}>
+            {(title || right) && (
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
+                  {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
                 </div>
-                <Badge color={p.status === "active" ? "green" : p.status === "paused" ? "yellow" : "slate"}>{p.status}</Badge>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg bg-slate-800 py-2">
-                  <div className="text-xs text-slate-400">Reply</div>
-                  <div className="font-semibold text-slate-100">{Math.round(p.kpi.reply * 100)}%</div>
-                </div>
-                <div className="rounded-lg bg-slate-800 py-2">
-                  <div className="text-xs text-slate-400">CTR</div>
-                  <div className="font-semibold text-slate-100">{Math.round(p.kpi.ctr * 100)}%</div>
-                </div>
-                <div className="rounded-lg bg-slate-800 py-2">
-                  <div className="text-xs text-slate-400">Conv</div>
-                  <div className="font-semibold text-slate-100">{(p.kpi.conv * 100).toFixed(1)}%</div>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <div className="text-xs text-slate-400">Активная база: <span className="font-mono text-slate-300">{p.activeContactBaseId}</span></div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onToggleProject(p); }}>{p.status === "active" ? "Пауза" : "Запустить"}</Button>
-                  <Button size="sm" onClick={(e) => { e.stopPropagation(); onOpenProject(p); }}>Открыть</Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Статусы и уведомления" subtitle="Системные события и алерты">
-        <ul className="space-y-2 text-sm text-slate-200">
-          <li className="flex items-start gap-2"><Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5"/>Все сервисы работают штатно</li>
-          <li className="flex items-start gap-2"><Icon name="warning" className="w-4 h-4 text-amber-400 mt-0.5"/>У агента @promo_agent_02 FloodWait — включён cooldown</li>
-          <li className="flex items-start gap-2"><Icon name="warning" className="w-4 h-4 text-amber-400 mt-0.5"/>Попытка подключить вторую активную базу — отклонено политикой</li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function AgentsView({ agents }) {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <Card title="Агенты" subtitle="Живые Telegram-аккаунты, предоставленные системой" right={<Button>+ Агент</Button>} className="lg:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {agents.map((a) => (
-            <div key={a.id} className="border border-slate-800 rounded-xl p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2"><Icon name="agent"/><div>
-                  <div className="font-medium text-slate-100">{a.username}</div>
-                  <div className="text-xs text-slate-400">Geo: {a.geo} • Warm: {(a.warm*100).toFixed(0)}%</div>
-                </div></div>
-                <Badge color={a.status === "active" ? "green" : a.status === "cooldown" ? "yellow" : "slate"}>{a.status}</Badge>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-sm text-slate-300">
-                <div>Сегодня отправлено: <span className="font-semibold text-slate-100">{a.messagesToday}</span></div>
-                <div>Flood: <Badge color={a.flood ? "red" : "green"}>{a.flood ? "yes" : "no"}</Badge></div>
-              </div>
-              <div className="mt-3 h-2 rounded bg-slate-800 overflow-hidden"><div className={`h-full ${a.flood ? "bg-amber-400" : "bg-emerald-500"}`} style={{ width: `${Math.min(100, a.messagesToday/10)}%` }} /></div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Политики безопасности" subtitle="Антибан, лимиты, ротации">
-        <ul className="space-y-2 text-sm list-disc pl-4 text-slate-300">
-          <li>Редактирование username и аватара недоступно вручную</li>
-          <li>Лимиты отправок и задержки регулируются системой</li>
-          <li>Автоматическая замена на fallback-агента при блокировке</li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function KnowledgeView() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <Card title="База знаний" subtitle="FAQ, OffFunnel ответы, термины" right={<><Button variant="outline">Экспорт</Button><Button>+ База знаний</Button></>} className="lg:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {["Оплата","Доставка","Техподдержка","Политики"].map((c) => (
-            <div key={c} className="border rounded-xl p-3 border-slate-800 hover:bg-slate-900">
-              <div className="font-medium text-slate-100">{c}</div>
-              <p className="text-sm text-slate-400 mt-1">AI отвечает на вопросы вне воронки. Добавьте правила, ответы, источники.</p>
-              <div className="mt-2 flex gap-2">
-                <Button size="sm" variant="outline">Правила</Button>
-                <Button size="sm">Тест</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Граф знаний" subtitle="Сущности и связи">
-        <div className="aspect-video rounded-xl bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-900 grid place-content-center text-slate-400 text-sm">
-          Визуализация связей (mock)
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function ContactsView({ contactBases, onReplaceActive }) {
-  const active = contactBases.find((b) => b.status === "active");
-  const archived = contactBases.filter((b) => b.status !== "active");
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="Контактная база" subtitle="В проекте разрешена только одна активная база" className="xl:col-span-2" right={<Badge color="blue">Правило: 1 активная база</Badge>}>
-        <div className="rounded-xl border border-slate-800 p-3 bg-slate-900">
-          <div className="flex items-center justify-between">
-            <div className="font-medium text-slate-100">{active?.name}</div>
-            <Badge color="green">active</Badge>
-          </div>
-          <div className="mt-1 text-sm text-slate-400">Контактов: {active?.size.toLocaleString("ru-RU")}</div>
-          <div className="mt-2 flex gap-2">
-            <Button size="sm">Импорт</Button>
-            <Button size="sm" variant="outline">Очистка</Button>
-            <Button size="sm" variant="outline">Валидация</Button>
-          </div>
-        </div>
-        <div className="mt-4">
-          <div className="text-xs uppercase tracking-wide text-slate-500 mb-2">Архив</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {archived.map((b) => (
-              <div key={b.id} className="border rounded-xl p-3 border-slate-800">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium text-slate-100">{b.name}</div>
-                  <Badge>{b.status}</Badge>
-                </div>
-                <div className="text-sm text-slate-400 mt-1">Контактов: {b.size.toLocaleString("ru-RU")}</div>
-                <div className="mt-2"><Button size="sm" variant="outline" onClick={() => onReplaceActive(b)}>Сделать активной</Button></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-      <Card title="KeywordAI / Parser" subtitle="Поиск и парсинг аудитории">
-        <div className="space-y-2 text-sm">
-          <input className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500" placeholder="Ключевые слова по нише"/>
-          <div className="flex gap-2">
-            <Button size="sm">Сгенерировать ключи</Button>
-            <Button size="sm" variant="outline">Запустить парсинг</Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function FunnelsView() {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="Воронка продаж" subtitle="Шаги, тексты, CTA" className="xl:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {["Приветствие","Квалификация","Оффер","CTA"].map((step, idx) => (
-            <div key={step} className="border rounded-xl p-3 border-slate-800">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-slate-100">{idx+1}. {step}</div>
-                <Badge color={idx===2?"yellow":"slate"}>{idx===2?"низкая конверсия":"ok"}</Badge>
-              </div>
-              <textarea className="mt-2 w-full border rounded-lg px-2 py-1 text-sm bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500" rows={4} defaultValue={`Текст шага "${step}"...`} />
-              <div className="mt-2 flex gap-2">
-                <Button size="sm" variant="outline">A/B вариант</Button>
-                <Button size="sm">AI-рекомендация</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Карта воронки" subtitle="Funnel Map">
-        <div className="aspect-video rounded-xl bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-900 grid place-content-center text-slate-400 text-sm">
-          Интерактивная схема (mock)
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function DialoguesView() {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="Диалоги" subtitle="Реальные переписки и статусы" className="xl:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[1,2,3,4].map((i) => (
-            <div key={i} className="border rounded-xl p-3 border-slate-800">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-slate-100">@user{i}</div>
-                <Badge color={i%2?"green":"yellow"}>{i%2?"в работе":"ожидание"}</Badge>
-              </div>
-              <div className="mt-2 text-sm text-slate-300 h-20 overflow-auto">Последние сообщения… AI ведёт диалог в рамках воронки, фиксирует интенты и реакции.</div>
-              <div className="mt-2 flex gap-2">
-                <Button size="sm" variant="outline">Открыть</Button>
-                <Button size="sm">Ответить</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Runtime" subtitle="Исполнение сценариев">
-        <ul className="space-y-2 text-sm text-slate-300">
-          <li>Активные диалоги: <b className="text-slate-100">128</b></li>
-          <li>Среднее время ответа: <b className="text-slate-100">1м 42с</b></li>
-          <li>В очереди: <b className="text-slate-100">23</b></li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function CRMView() {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="Лиды" subtitle="Стадии, задачи, звонки" className="xl:col-span-2">
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-slate-400"><th className="py-2">Лид</th><th>Стадия</th><th>Ответств.</th><th>След.действие</th><th className="text-right">Вероятность</th></tr></thead>
-            <tbody>
-              {[
-                { name: "Иван П.", stage: "Переговоры", owner:"Мария", next:"Звонок", prob: 0.62 },
-                { name: "ООО Альфа", stage: "Оффер", owner:"VIKI", next:"Прайс", prob: 0.48 },
-                { name: "Сергей К.", stage: "Квалификация", owner:"Дмитрий", next:"Бриф", prob: 0.31 },
-              ].map((l)=> (
-                <tr key={l.name} className="border-t border-slate-800 text-slate-200">
-                  <td className="py-2">{l.name}</td>
-                  <td><Badge color="blue">{l.stage}</Badge></td>
-                  <td>{l.owner}</td>
-                  <td>{l.next}</td>
-                  <td className="text-right font-semibold">{Math.round(l.prob*100)}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      <Card title="Календарь" subtitle="Ближайшие задачи">
-        <ul className="text-sm space-y-2 text-slate-300">
-          <li><b className="text-slate-100">10:00</b> — Звонок Ивану П.</li>
-          <li><b className="text-slate-100">13:30</b> — Демо показ</li>
-          <li><b className="text-slate-100">16:00</b> — Подтверждение оплаты</li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function AnalyticsView({ projects }) {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="KPI" subtitle="Сводные показатели" className="xl:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {projects.slice(0,2).map((p)=> (
-            <div key={p.id} className="border rounded-xl p-3 border-slate-800">
-              <div className="font-medium text-slate-100">{p.name}</div>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">Reply</div><div className="font-semibold text-slate-100">{Math.round(p.kpi.reply*100)}%</div></div>
-                <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">CTR</div><div className="font-semibold text-slate-100">{Math.round(p.kpi.ctr*100)}%</div></div>
-                <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">Conv</div><div className="font-semibold text-slate-100">{(p.kpi.conv*100).toFixed(1)}%</div></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="A/B и рекомендации" subtitle="AI улучшения">
-        <ul className="text-sm space-y-2 list-disc pl-4 text-slate-300">
-          <li>Шаг 3 «Оффер»: заменить CTA, усилить выгоды</li>
-          <li>Тон сообщений: мягче в первом касании</li>
-          <li>Время отправки: смещение на 11:00–13:00</li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function AutopilotView({ enabled, onToggle }) {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="AI-Автопилот" subtitle="Автоматическое управление коммуникациями" right={<Toggle checked={enabled} onChange={onToggle}/>} className="xl:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {["Рассылки","Оптимизация","Пояснения"].map((b, idx)=> (
-            <div key={b} className={`border rounded-xl p-3 ${enabled?"border-emerald-400/30 bg-emerald-500/10":"border-slate-800"}`}>
-              <div className="font-medium text-slate-100">{b}</div>
-              <p className="text-sm text-slate-400 mt-1">{idx===0?"Планирование и отправка в безопасных окнах": idx===1?"A/B, baseline и адаптация": "Explainability API — причины действий"}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card title="Триггеры" subtitle="Trigger Registry">
-        <ul className="text-sm space-y-2 text-slate-300">
-          <li><Badge color="violet">Повторный контакт</Badge> — спустя 48ч без ответа</li>
-          <li><Badge color="violet">Новый лид</Badge> — мгновенное приветствие</li>
-          <li><Badge color="violet">Низкая конверсия</Badge> — включить вариант B</li>
-        </ul>
-      </Card>
-    </div>
-  );
-}
-
-function SettingsView() {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-      <Card title="Доступ и роли" subtitle="RoleAccessGuard">
-        <ul className="text-sm space-y-2 text-slate-300">
-          <li>Администратор — полный доступ</li>
-          <li>Оператор — диалоги, CRM</li>
-          <li>Аналитик — отчёты, KPI</li>
-        </ul>
-      </Card>
-      <Card title="Тарифы и VC" subtitle="VIKICoin">
-        <div className="text-sm text-slate-300">Баланс: <b className="text-slate-100">2 500 VC</b></div>
-        <div className="mt-2 flex gap-2"><Button size="sm">Пополнить</Button><Button size="sm" variant="outline">История</Button></div>
-      </Card>
-      <Card title="Уведомления" subtitle="Notifier">
-        <div className="flex items-center justify-between text-sm text-slate-300"><span>Telegram-алерты</span><Toggle checked onChange={()=>{}}/></div>
-      </Card>
-    </div>
-  );
-}
-
-// ————————————————————————————————————————————————————————————
-// Project Wizard (без изменений логики)
-function ProjectWizard({ open, onClose, onCreate, agents, contactBases }) {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  const [agentId, setAgentId] = useState(agents[0]?.id);
-  const [kb, setKb] = useState("kb_main");
-  const [funnel, setFunnel] = useState("funnel_new");
-  const [activeBaseId, setActiveBaseId] = useState(contactBases.find(b=>b.status==='active')?.id || "");
-  const [auto, setAuto] = useState(false);
-
-  if (!open) return null;
-
-  const canNext = () => {
-    if (step === 1) return name.trim().length >= 3;
-    if (step === 2) return !!agentId;
-    if (step === 3) return !!kb && !!funnel;
-    if (step === 4) return !!activeBaseId; // guard: exactly one active base
-    return true;
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center p-4 z-50">
-      <div className="w-full max-w-3xl bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold text-slate-100">Новый проект</div>
-            <div className="text-xs text-slate-500">Шаг {step} из 5</div>
-          </div>
-          <Button variant="ghost" onClick={onClose}>Закрыть</Button>
-        </div>
-        <div className="p-5 space-y-4">
-          {step === 1 && (
-            <div className="space-y-3">
-              <Field label="Название проекта" required hint="Мин. 3 символа">
-                <input className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500" placeholder="Например, Продажа кухонь" value={name} onChange={(e)=>setName(e.target.value)} />
-              </Field>
-              <div className="text-xs text-slate-400">Проект объединяет: агенты, база знаний, воронка, <b>одна активная база контактов</b>, аналитика, автопилот.</div>
-            </div>
-          )}
-          {step === 2 && (
-            <div className="space-y-3">
-              <Field label="Агент" required>
-                <select className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100" value={agentId} onChange={(e)=>setAgentId(e.target.value)}>
-                  {agents.map((a)=> <option key={a.id} value={a.id}>{a.username} • {a.geo} • warm {Math.round(a.warm*100)}%</option>)}
-                </select>
-              </Field>
-              <div className="text-xs text-slate-500">Агенты предоставляются системой, проходят авторегистрацию и прогрев автоматически.</div>
-            </div>
-          )}
-          {step === 3 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="База знаний" required>
-                <select className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100" value={kb} onChange={(e)=>setKb(e.target.value)}>
-                  <option value="kb_main">kb_main</option>
-                  <option value="kb_hr">kb_hr</option>
-                  <option value="kb_support">kb_support</option>
-                </select>
-              </Field>
-              <Field label="Воронка" required>
-                <select className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100" value={funnel} onChange={(e)=>setFunnel(e.target.value)}>
-                  <option value="funnel_new">funnel_new</option>
-                  <option value="funnel_kitchen">funnel_kitchen</option>
-                  <option value="funnel_hr">funnel_hr</option>
-                </select>
-              </Field>
-            </div>
-          )}
-          {step === 4 && (
-            <div className="space-y-3">
-              <Field label="Активная база контактов" required hint="В проекте допускается только одна активная база">
-                <select className="w-full border rounded-xl px-3 py-2 bg-slate-900 border-slate-700 text-slate-100" value={activeBaseId} onChange={(e)=>setActiveBaseId(e.target.value)}>
-                  {contactBases.map((b)=> <option key={b.id} value={b.id} disabled={b.status!=="active" && true}>{b.name} {b.status!=="active"?"(архив)":""}</option>)}
-                </select>
-              </Field>
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-200 text-sm">
-                <Icon name="warning" className="w-4 h-4"/> В проекте может быть <b>только одна активная</b> база. При замене текущая станет архивной.
-              </div>
-            </div>
-          )}
-          {step === 5 && (
-            <div className="space-y-3">
-              <Field label="Автопилот" hint="Можно включить позже в разделе Autopilot">
-                <div className="flex items-center justify-between border rounded-xl px-3 py-2 border-slate-700">
-                  <span className="text-slate-200">Включить AI-управление</span>
-                  <Toggle checked={auto} onChange={setAuto} />
-                </div>
-              </Field>
-              <div className="rounded-xl border border-slate-800 p-3 text-sm text-slate-300">
-                <div className="font-medium mb-1 text-slate-100">Проверка настроек</div>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Проект: <b className="text-slate-100">{name || "—"}</b></li>
-                  <li>Агент: <b className="text-slate-100">{agents.find(a=>a.id===agentId)?.username}</b></li>
-                  <li>KB / Funnel: <b className="text-slate-100">{kb}</b> / <b className="text-slate-100">{funnel}</b></li>
-                  <li>Активная база: <b className="text-slate-100">{activeBaseId}</b></li>
-                  <li>Автопилот: <b className="text-slate-100">{auto?"on":"off"}</b></li>
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="px-5 py-4 border-t border-slate-800 flex items-center justify-between bg-slate-900">
-          <div className="text-xs text-slate-500">Политики: Antiban • Throttle • Fallback • Audit</div>
-          <div className="flex items-center gap-2">
-            {step>1 && <Button variant="outline" onClick={()=>setStep(step-1)}>Назад</Button>}
-            {step<5 && <Button onClick={()=> canNext() && setStep(step+1)} disabled={!canNext()}>Далее</Button>}
-            {step===5 && <Button onClick={()=> onCreate({ name, agentId, kb, funnel, activeBaseId, auto })} disabled={!name}>Создать</Button>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ————————————————————————————————————————————————————————————
-// Root App — левый блок (меню) + правый блок (интерфейс)
-const NAV = [
-  { id: "projects", label: "Проекты", icon: "project" },
-  { id: "agents", label: "Агенты", icon: "agent" },
-  { id: "kb", label: "База знаний", icon: "kb" },
-  { id: "contacts", label: "Контакты", icon: "contacts" },
-  { id: "funnels", label: "Воронки", icon: "funnel" },
-  { id: "dialogues", label: "Диалоги", icon: "chat" },
-  { id: "crm", label: "CRM", icon: "crm" },
-  { id: "analytics", label: "Аналитика", icon: "analytics" },
-  { id: "autopilot", label: "Автопилот", icon: "autopilot" },
-  { id: "settings", label: "Настройки", icon: "settings" },
-];
-
-function ActiveProjectPanel({ project }) {
-  if (!project) return null;
-  return (
-    <div className="max-w-7xl mx-auto px-4 mt-2">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <div className="text-sm font-semibold text-slate-200 mb-2">Активный проект</div>
-        <div className="grid gap-3 sm:grid-cols-3 text-sm">
-          <div>
-            <div className="text-slate-500">Проект</div>
-            <div className="text-slate-100">{project.name}</div>
-          </div>
-          <div>
-            <div className="text-slate-500">Контактная база</div>
-            <div className="font-mono text-slate-300">{project.activeContactBaseId}</div>
-          </div>
-          <div className="sm:text-right">
-            <div className="text-slate-500">Статус</div>
-            <Badge color={project.status === "active"?"green":"yellow"}>{project.status}</Badge>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function VIKIUserApp() {
-  const [tab, setTab] = useState("projects");
-  const [projects, setProjects] = useState(MOCK_PROJECTS);
-  const [agents] = useState(MOCK_AGENTS);
-  const [contactBases, setContactBases] = useState(MOCK_CONTACT_BASES);
-  const [wizard, setWizard] = useState(false);
-  const [autopilot, setAutopilot] = useState(true);
-  const currentProject = useMemo(()=> projects[0], [projects]);
-
-  function handleReplaceActive(base) {
-    setContactBases((prev)=> prev.map((b)=> ({ ...b, status: b.id === base.id ? "active" : (b.status === "active" ? "archived" : b.status) })));
-  }
-
-  function handleCreateProject(data) {
-    setProjects((prev)=> ([...prev, {
-      id: `proj_${String(prev.length+1).padStart(3,'0')}`,
-      name: data.name,
-      status: "active",
-      agentIds: [data.agentId],
-      funnelId: data.funnel,
-      kbId: data.kb,
-      activeContactBaseId: data.activeBaseId,
-      autoOptimize: data.auto,
-      kpi: { conv: 0.0, reply: 0.0, ctr: 0.0 },
-    }]));
-    setWizard(false);
-    setTab("projects");
-  }
-
-  function handleToggleProject(p) {
-    setProjects((prev)=> prev.map((x)=> x.id===p.id ? { ...x, status: x.status === "active" ? "paused" : "active" } : x));
-  }
-
-  function Content() {
-    switch (tab) {
-      case "projects":
-        return <ProjectsView projects={projects} onOpenWizard={()=>setWizard(true)} onToggleProject={handleToggleProject} onOpenProject={()=>{}}/>;
-      case "agents":
-        return <AgentsView agents={agents}/>;
-      case "kb":
-        return <KnowledgeView/>;
-      case "contacts":
-        return <ContactsView contactBases={contactBases} onReplaceActive={handleReplaceActive}/>;
-      case "funnels":
-        return <FunnelsView/>;
-      case "dialogues":
-        return <DialoguesView/>;
-      case "crm":
-        return <CRMView/>;
-      case "analytics":
-        return <AnalyticsView projects={projects}/>;
-      case "autopilot":
-        return <AutopilotView enabled={autopilot} onToggle={setAutopilot}/>;
-      case "settings":
-        return <SettingsView/>;
-      default:
-        return null;
-    }
-  }
-
-  return (
-    <div className="min-h-screen text-slate-100 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-indigo-600 grid place-content-center text-white shadow-lg shadow-indigo-600/30"><Icon name="logo" className="w-4 h-4"/></div>
-            <div>
-              <div className="font-semibold">VIKI</div>
-              <div className="text-xs text-slate-400">Telegram-native AI Platform</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">Помощь</Button>
-            <Button size="sm" onClick={()=>setWizard(true)}>Создать проект</Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main layout: Левый блок (меню) | Правый блок (интерфейс пользователя VIKI) */}
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px,1fr] gap-6">
-        {/* Sidebar — отдельный блок меню (sticky + прокрутка) */}
-        <aside className="lg:sticky lg:top-[72px] h-[calc(100vh-88px)] overflow-y-auto">
-          <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">МЕНЮ</div>
-          <nav className="rounded-2xl border border-slate-800 bg-slate-900/70 p-2">
-            {NAV.map((n)=> (
-              <button
-                key={n.id}
-                onClick={()=>setTab(n.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors
-                  ${tab===n.id
-                    ? "text-white bg-indigo-600/90 hover:bg-indigo-500 ring-2 ring-indigo-400/60 shadow-[0_0_18px] shadow-indigo-500/35"
-                    : "text-slate-200 hover:bg-slate-800"}`}
-              >
-                <Icon name={n.icon} className="w-4 h-4"/>
-                {n.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        {/* Правый блок — отдельная карточка «Интерфейс пользователя VIKI» */}
-        <main aria-label="Интерфейс пользователя VIKI">
-          <Card
-            title={NAV.find(n=>n.id===tab)?.label}
-            subtitle="Интерфейс пользователя VIKI"
-            right={(
-              <div className="flex items-center gap-2">
-                {/* Глобальные кнопки можно оставить пустыми — у секций свои */}
+                <div className="flex items-center gap-2">{right}</div>
               </div>
             )}
-          >
-            <Content />
-          </Card>
-        </main>
-      </div>
-
-      {/* Активный проект — ВНИЗУ страницы на всю ширину, как на скриншоте */}
-      <ActiveProjectPanel project={currentProject} />
-
-      {/* Wizard */}
-      <ProjectWizard open={wizard} onClose={()=>setWizard(false)} onCreate={handleCreateProject} agents={agents} contactBases={contactBases} />
-
-      {/* Footer */}
-      <footer className="mt-6 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-500 flex items-center justify-between">
-          <div>© {new Date().getFullYear()} VIKI.ai — Все права защищены</div>
-          <div className="flex items-center gap-2">
-            <Badge>Antiban</Badge>
-            <Badge>Throttle</Badge>
-            <Badge>Fallback</Badge>
-            <Badge>Audit</Badge>
+            <div className="p-4">{children}</div>
           </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+        );
+      }
+
+      function Button({ children, onClick, variant = "primary", size = "md", className = "", disabled }) {
+        const v = {
+          primary: "bg-indigo-500 text-white hover:bg-indigo-400",
+          ghost: "bg-transparent text-slate-200 hover:bg-slate-800",
+          outline: "bg-transparent text-slate-100 border border-slate-700 hover:bg-slate-800",
+          danger: "bg-rose-600 text-white hover:bg-rose-500",
+          success: "bg-emerald-600 text-white hover:bg-emerald-500",
+        };
+        const s = { sm: "px-3 py-1.5 text-sm rounded-xl", md: "px-3.5 py-2 text-sm rounded-xl", lg: "px-4 py-2.5 text-base rounded-2xl" };
+        return (
+          <button onClick={onClick} disabled={disabled} className={`${v[variant]} ${s[size]} transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}>
+            {children}
+          </button>
+        );
+      }
+
+      function Toggle({ checked, onChange }) {
+        return (
+          <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all ${checked ? "bg-emerald-500" : "bg-slate-600"} relative`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-all ${checked ? "translate-x-5" : ""}`} />
+          </button>
+        );
+      }
+
+      function Field({ label, hint, children, required }) {
+        return (
+          <label className="block">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-200">
+                {label}{required && <span className="text-rose-400">*</span>}
+              </span>
+              {hint && <span className="text-xs text-slate-500">{hint}</span>}
+            </div>
+            <div className="mt-1.5">{children}</div>
+          </label>
+        );
+      }
+
+      // ---------------- Mock data (определены до использования!) ----------------
+      const MOCK_AGENTS = [
+        { id: "agent_001", username: "@promo_agent_01", status: "active",   warm: 0.91, geo: "KZ", messagesToday: 437, flood: false },
+        { id: "agent_002", username: "@promo_agent_02", status: "cooldown", warm: 0.72, geo: "RU", messagesToday: 188, flood: true  },
+        { id: "agent_003", username: "@sales_maria",    status: "paused",   warm: 0.83, geo: "TR", messagesToday: 0,   flood: false },
+      ];
+
+      const MOCK_CONTACT_BASES = [
+        { id: "base_main",    name: "Активная база: Лиды Май", size: 18240, status: "active"   },
+        { id: "base_webinar", name: "Вебинар Апрель (архив)",  size:  5320, status: "archived" },
+      ];
+
+      const MOCK_PROJECTS = [
+        {
+          id: "proj_001",
+          name: "Продажа кухонь",
+          status: "active",
+          agentIds: ["agent_001"],
+          funnelId: "funnel_kitchen",
+          kbId: "kb_main",
+          activeContactBaseId: "base_main",
+          autoOptimize: false,
+          kpi: { conv: 0.064, reply: 0.41, ctr: 0.23 },
+        },
+        {
+          id: "proj_002",
+          name: "Рекрутинг курьеров",
+          status: "paused",
+          agentIds: ["agent_002"],
+          funnelId: "funnel_hr",
+          kbId: "kb_hr",
+          activeContactBaseId: "base_main",
+          autoOptimize: true,
+          kpi: { conv: 0.028, reply: 0.36, ctr: 0.19 },
+        },
+      ];
+
+      // ---------------- Views (усечённый набор для демонстрации) ----------------
+      function ProjectsView({ projects, onOpenWizard, onToggleProject }) {
+        return (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <Card
+              title="Проекты"
+              subtitle="Централизованное управление сущностями и запуском"
+              right={<Button onClick={onOpenWizard}>+ Новый проект</Button>}
+              className="xl:col-span-2"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {projects.map((p) => (
+                  <div key={p.id} className="rounded-xl border border-slate-800 p-3 hover:bg-slate-900 transition">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon name="project" />
+                        <div>
+                          <div className="font-medium text-slate-100">{p.name}</div>
+                          <div className="text-xs text-slate-400">Funnel: <span className="font-mono text-slate-300">{p.funnelId}</span></div>
+                        </div>
+                      </div>
+                      <Badge color={p.status === "active" ? "green" : p.status === "paused" ? "yellow" : "slate"}>{p.status}</Badge>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-lg bg-slate-800 py-2">
+                        <div className="text-xs text-slate-400">Reply</div>
+                        <div className="font-semibold text-slate-100">{Math.round(p.kpi.reply * 100)}%</div>
+                      </div>
+                      <div className="rounded-lg bg-slate-800 py-2">
+                        <div className="text-xs text-slate-400">CTR</div>
+                        <div className="font-semibold text-slate-100">{Math.round(p.kpi.ctr * 100)}%</div>
+                      </div>
+                      <div className="rounded-lg bg-slate-800 py-2">
+                        <div className="text-xs text-slate-400">Conv</div>
+                        <div className="font-semibold text-slate-100">{(p.kpi.conv * 100).toFixed(1)}%</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="text-xs text-slate-400">
+                        Активная база: <span className="font-mono text-slate-300">{p.activeContactBaseId}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); onToggleProject(p); }}
+                        >
+                          {p.status === "active" ? "Пауза" : "Запустить"}
+                        </Button>
+                        <Button size="sm">Открыть</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card title="Статусы и уведомления" subtitle="Системные события и алерты">
+              <ul className="space-y-2 text-sm text-slate-200">
+                <li className="flex items-start gap-2"><Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5"/>Все сервисы работают штатно</li>
+                <li className="flex items-start gap-2"><Icon name="warning" className="w-4 h-4 text-amber-400 mt-0.5"/>У агента @promo_agent_02 FloodWait — включён cooldown</li>
+                <li className="flex items-start gap-2"><Icon name="warning" className="w-4 h-4 text-amber-400 mt-0.5"/>Попытка подключить вторую активную базу — отклонено политикой</li>
+              </ul>
+            </Card>
+          </div>
+        );
+      }
+
+      // ---------------- Active Project panel (внизу страницы) ----------------
+      function ActiveProjectPanel({ project }) {
+        if (!project) return null;
+        return (
+          <div className="max-w-7xl mx-auto px-4 mt-2">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="text-sm font-semibold text-slate-200 mb-2">Активный проект</div>
+              <div className="grid gap-3 sm:grid-cols-3 text-sm">
+                <div>
+                  <div className="text-slate-500">Проект</div>
+                  <div className="text-slate-100">{project.name}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Контактная база</div>
+                  <div className="font-mono text-slate-300">{project.activeContactBaseId}</div>
+                </div>
+                <div className="sm:text-right">
+                  <div className="text-slate-500">Статус</div>
+                  <Badge color={project.status === "active" ? "green" : "yellow"}>{project.status}</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ---------------- Навигация + App ----------------
+      const NAV = [
+        { id: "projects",  label: "Проекты",   icon: "project"   },
+        { id: "agents",    label: "Агенты",     icon: "agent"     },
+        { id: "kb",        label: "База знаний",icon: "kb"        },
+        { id: "contacts",  label: "Контакты",   icon: "contacts"  },
+        { id: "funnels",   label: "Воронки",    icon: "funnel"    },
+        { id: "dialogues", label: "Диалоги",    icon: "chat"      },
+        { id: "crm",       label: "CRM",        icon: "crm"       },
+        { id: "analytics", label: "Аналитика",  icon: "analytics" },
+        { id: "autopilot", label: "Автопилот",  icon: "autopilot" },
+        { id: "settings",  label: "Настройки",  icon: "settings"  },
+      ];
+
+      function VIKIUserApp() {
+        const [tab, setTab] = useState("projects");
+        const [projects, setProjects] = useState(MOCK_PROJECTS);
+        const [wizard, setWizard] = useState(false);
+        const currentProject = useMemo(() => projects[0], [projects]);
+
+        function handleToggleProject(p) {
+          setProjects(prev =>
+            prev.map(x => x.id === p.id ? { ...x, status: x.status === "active" ? "paused" : "active" } : x)
+          );
+        }
+
+        function Content() {
+          switch (tab) {
+            case "projects":
+            default:
+              return (
+                <ProjectsView
+                  projects={projects}
+                  onOpenWizard={() => setWizard(true)}
+                  onToggleProject={handleToggleProject}
+                />
+              );
+          }
+        }
+
+        return (
+          <>
+            {/* Top bar */}
+            <header className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur border-b border-slate-800">
+              <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 grid place-content-center text-white shadow-lg shadow-indigo-600/30">
+                    <Icon name="logo" className="w-4 h-4"/>
+                  </div>
+                  <div>
+                    <div className="font-semibold">VIKI</div>
+                    <div className="text-xs text-slate-400">Telegram-native AI Platform</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">Помощь</Button>
+                  <Button size="sm" onClick={() => setWizard(true)}>Создать проект</Button>
+                </div>
+              </div>
+            </header>
+
+            {/* Основная раскладка: слева меню (sticky), справа контент в карточке */}
+            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px,1fr] gap-6">
+              {/* Sidebar */}
+              <aside className="lg:sticky lg:top-[72px] h-max">
+                <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">Меню</div>
+                <nav className="rounded-2xl border border-slate-800 bg-slate-900/70 p-2">
+                  {NAV.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => setTab(n.id)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors
+                        ${tab === n.id
+                          ? "bg-indigo-600/90 text-white shadow-inner"
+                          : "text-slate-200 hover:bg-slate-800"}`}
+                    >
+                      <Icon name={n.icon} className="w-4 h-4" />
+                      {n.label}
+                    </button>
+                  ))}
+                </nav>
+              </aside>
+
+              {/* Content */}
+              <main aria-label="Интерфейс пользователя VIKI">
+                <Card
+                  title={NAV.find(n => n.id === tab)?.label}
+                  subtitle="Интерфейс пользователя VIKI"
+                >
+                  <Content />
+                </Card>
+              </main>
+            </div>
+
+            {/* Панель активного проекта внизу страницы */}
+            <ActiveProjectPanel project={currentProject} />
+          </>
+        );
+      }
+
+      // ---------------- Mount ----------------
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<VIKIUserApp />);
+
+      // ---------------- Smoke tests (консоль) ----------------
+      (function runSmokeTests() {
+        try {
+          const sidebar = document.querySelector("aside nav");
+          const mainCardTitle = Array.from(document.querySelectorAll("h3")).find(h => h.textContent.trim().length);
+          const grid = document.querySelector("div.max-w-7xl.mx-auto.px-4.py-6.grid");
+
+          console.log("[SMOKE] sidebar exists:", !!sidebar);
+          console.log("[SMOKE] main card title:", mainCardTitle?.textContent || "<none>");
+          console.log("[SMOKE] grid layout classes:", grid?.className || "<none>");
+
+          if (!sidebar) throw new Error("Sidebar not rendered");
+          if (!grid?.className.includes("lg:grid-cols-[260px,1fr]")) {
+            throw new Error("Grid columns do not match expected layout");
+          }
+          console.log("%cAll smoke tests passed", "color: #10b981");
+        } catch (e) {
+          console.error("[SMOKE] failed:", e);
+        }
+      })();
+    </script>
+  </body>
+</html>
+
