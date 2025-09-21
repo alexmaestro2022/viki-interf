@@ -3,39 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VIKI — Telegram-native AI Platform (Mock)</title>
-
-    <!-- Tailwind via CDN (для быстрого предпросмотра) -->
+    <title>VIKI UI — Preview</title>
+    <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {},
-            boxShadow: {},
-          },
-        },
-      };
-    </script>
-
-    <!-- React 18 UMD + Babel (для JSX в браузере) -->
+    <!-- React 18 UMD + ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <style>
-      html, body { height: 100%; }
-      /* Слегка сгладим фон, чтобы он был ближе к вашим макетам */
-      .app-bg {
-        background: linear-gradient(135deg, #0b1220 0%, #0f172a 45%, #111827 100%);
-      }
-    </style>
+    <!-- Babel for in-browser JSX/TSX transform -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
-  <body class="min-h-screen app-bg text-slate-100">
+  <body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
     <div id="root"></div>
 
     <script type="text/babel">
-      // ---------------- Helper mini-components ----------------
       const { useMemo, useState } = React;
 
       function Icon({ name, className = "w-5 h-5" }) {
@@ -115,14 +95,17 @@
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V22a2 2 0 01-4 0v-.11a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 010-4h.11c.66 0 1.26-.39 1.51-1z" />
               </svg>
             );
-          case "play":
-            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5l11 7-11 7V5z"/></svg>;
-          case "pause":
-            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>;
           case "check":
-            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 13l4 4L19 7"/></svg>;
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 13l4 4L19 7"/></svg>
+            );
           case "warning":
-            return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
+            return (
+              <svg viewBox="0 0 24 24" className={className} {...common}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <path d="M12 9v4"/><path d="M12 17h.01"/>
+              </svg>
+            );
           default:
             return null;
         }
@@ -138,9 +121,7 @@
           violet: "bg-violet-500/15 text-violet-300 border-violet-400/20",
         };
         return (
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${map[color]}`}>
-            {children}
-          </span>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${map[color]}`}>{children}</span>
         );
       }
 
@@ -185,70 +166,31 @@
         );
       }
 
-      function Field({ label, hint, children, required }) {
-        return (
-          <label className="block">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-200">
-                {label}{required && <span className="text-rose-400">*</span>}
-              </span>
-              {hint && <span className="text-xs text-slate-500">{hint}</span>}
-            </div>
-            <div className="mt-1.5">{children}</div>
-          </label>
-        );
-      }
-
-      // ---------------- Mock data (определены до использования!) ----------------
+      // Mock data
       const MOCK_AGENTS = [
-        { id: "agent_001", username: "@promo_agent_01", status: "active",   warm: 0.91, geo: "KZ", messagesToday: 437, flood: false },
-        { id: "agent_002", username: "@promo_agent_02", status: "cooldown", warm: 0.72, geo: "RU", messagesToday: 188, flood: true  },
-        { id: "agent_003", username: "@sales_maria",    status: "paused",   warm: 0.83, geo: "TR", messagesToday: 0,   flood: false },
+        { id: "agent_001", username: "@promo_agent_01", status: "active", warm: 0.91, geo: "KZ", messagesToday: 437, flood: false },
+        { id: "agent_002", username: "@promo_agent_02", status: "cooldown", warm: 0.72, geo: "RU", messagesToday: 188, flood: true },
+        { id: "agent_003", username: "@sales_maria", status: "paused", warm: 0.83, geo: "TR", messagesToday: 0, flood: false },
       ];
 
       const MOCK_CONTACT_BASES = [
-        { id: "base_main",    name: "Активная база: Лиды Май", size: 18240, status: "active"   },
-        { id: "base_webinar", name: "Вебинар Апрель (архив)",  size:  5320, status: "archived" },
+        { id: "base_main", name: "Активная база: Лиды Май", size: 18240, status: "active" },
+        { id: "base_webinar", name: "Вебинар Апрель (архив)", size: 5320, status: "archived" },
       ];
 
       const MOCK_PROJECTS = [
-        {
-          id: "proj_001",
-          name: "Продажа кухонь",
-          status: "active",
-          agentIds: ["agent_001"],
-          funnelId: "funnel_kitchen",
-          kbId: "kb_main",
-          activeContactBaseId: "base_main",
-          autoOptimize: false,
-          kpi: { conv: 0.064, reply: 0.41, ctr: 0.23 },
-        },
-        {
-          id: "proj_002",
-          name: "Рекрутинг курьеров",
-          status: "paused",
-          agentIds: ["agent_002"],
-          funnelId: "funnel_hr",
-          kbId: "kb_hr",
-          activeContactBaseId: "base_main",
-          autoOptimize: true,
-          kpi: { conv: 0.028, reply: 0.36, ctr: 0.19 },
-        },
+        { id: "proj_001", name: "Продажа кухонь", status: "active", agentIds: ["agent_001"], funnelId: "funnel_kitchen", kbId: "kb_main", activeContactBaseId: "base_main", autoOptimize: false, kpi: { conv: 0.064, reply: 0.41, ctr: 0.23 } },
+        { id: "proj_002", name: "Рекрутинг курьеров", status: "paused", agentIds: ["agent_002"], funnelId: "funnel_hr", kbId: "kb_hr", activeContactBaseId: "base_main", autoOptimize: true, kpi: { conv: 0.028, reply: 0.36, ctr: 0.19 } },
       ];
 
-      // ---------------- Views (усечённый набор для демонстрации) ----------------
-      function ProjectsView({ projects, onOpenWizard, onToggleProject }) {
+      // Views (trimmed to essential ones for preview)
+      function ProjectsView({ projects, onOpenWizard, onToggleProject, onOpenProject }) {
         return (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <Card
-              title="Проекты"
-              subtitle="Централизованное управление сущностями и запуском"
-              right={<Button onClick={onOpenWizard}>+ Новый проект</Button>}
-              className="xl:col-span-2"
-            >
+            <Card title="Проекты" subtitle="Централизованное управление сущностями и запуском" right={<Button onClick={onOpenWizard}>+ Новый проект</Button>} className="xl:col-span-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {projects.map((p) => (
-                  <div key={p.id} className="rounded-xl border border-slate-800 p-3 hover:bg-slate-900 transition">
+                  <div key={p.id} className="rounded-xl border border-slate-800 p-3 hover:bg-slate-900 transition" onClick={() => onOpenProject(p)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Icon name="project" />
@@ -260,39 +202,21 @@
                       <Badge color={p.status === "active" ? "green" : p.status === "paused" ? "yellow" : "slate"}>{p.status}</Badge>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-lg bg-slate-800 py-2">
-                        <div className="text-xs text-slate-400">Reply</div>
-                        <div className="font-semibold text-slate-100">{Math.round(p.kpi.reply * 100)}%</div>
-                      </div>
-                      <div className="rounded-lg bg-slate-800 py-2">
-                        <div className="text-xs text-slate-400">CTR</div>
-                        <div className="font-semibold text-slate-100">{Math.round(p.kpi.ctr * 100)}%</div>
-                      </div>
-                      <div className="rounded-lg bg-slate-800 py-2">
-                        <div className="text-xs text-slate-400">Conv</div>
-                        <div className="font-semibold text-slate-100">{(p.kpi.conv * 100).toFixed(1)}%</div>
-                      </div>
+                      <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">Reply</div><div className="font-semibold text-slate-100">{Math.round(p.kpi.reply * 100)}%</div></div>
+                      <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">CTR</div><div className="font-semibold text-slate-100">{Math.round(p.kpi.ctr * 100)}%</div></div>
+                      <div className="rounded-lg bg-slate-800 py-2"><div className="text-xs text-slate-400">Conv</div><div className="font-semibold text-slate-100">{(p.kpi.conv * 100).toFixed(1)}%</div></div>
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <div className="text-xs text-slate-400">
-                        Активная база: <span className="font-mono text-slate-300">{p.activeContactBaseId}</span>
-                      </div>
+                      <div className="text-xs text-slate-400">Активная база: <span className="font-mono text-slate-300">{p.activeContactBaseId}</span></div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); onToggleProject(p); }}
-                        >
-                          {p.status === "active" ? "Пауза" : "Запустить"}
-                        </Button>
-                        <Button size="sm">Открыть</Button>
+                        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onToggleProject(p); }}>{p.status === "active" ? "Пауза" : "Запустить"}</Button>
+                        <Button size="sm" onClick={(e) => { e.stopPropagation(); onOpenProject(p); }}>Открыть</Button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </Card>
-
             <Card title="Статусы и уведомления" subtitle="Системные события и алерты">
               <ul className="space-y-2 text-sm text-slate-200">
                 <li className="flex items-start gap-2"><Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5"/>Все сервисы работают штатно</li>
@@ -304,81 +228,53 @@
         );
       }
 
-      // ---------------- Active Project panel (внизу страницы) ----------------
-      function ActiveProjectPanel({ project }) {
-        if (!project) return null;
+      function KnowledgeView(){
         return (
-          <div className="max-w-7xl mx-auto px-4 mt-2">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="text-sm font-semibold text-slate-200 mb-2">Активный проект</div>
-              <div className="grid gap-3 sm:grid-cols-3 text-sm">
-                <div>
-                  <div className="text-slate-500">Проект</div>
-                  <div className="text-slate-100">{project.name}</div>
-                </div>
-                <div>
-                  <div className="text-slate-500">Контактная база</div>
-                  <div className="font-mono text-slate-300">{project.activeContactBaseId}</div>
-                </div>
-                <div className="sm:text-right">
-                  <div className="text-slate-500">Статус</div>
-                  <Badge color={project.status === "active" ? "green" : "yellow"}>{project.status}</Badge>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Card title="Knowledge Base" subtitle="Demo">
+            <div className="text-sm text-slate-300">Тут будет контент выбранного раздела…</div>
+          </Card>
         );
       }
 
-      // ---------------- Навигация + App ----------------
       const NAV = [
-        { id: "projects",  label: "Проекты",   icon: "project"   },
-        { id: "agents",    label: "Агенты",     icon: "agent"     },
-        { id: "kb",        label: "База знаний",icon: "kb"        },
-        { id: "contacts",  label: "Контакты",   icon: "contacts"  },
-        { id: "funnels",   label: "Воронки",    icon: "funnel"    },
-        { id: "dialogues", label: "Диалоги",    icon: "chat"      },
-        { id: "crm",       label: "CRM",        icon: "crm"       },
-        { id: "analytics", label: "Аналитика",  icon: "analytics" },
-        { id: "autopilot", label: "Автопилот",  icon: "autopilot" },
-        { id: "settings",  label: "Настройки",  icon: "settings"  },
+        { id: "projects", label: "Проекты", icon: "project" },
+        { id: "agents", label: "Агенты", icon: "agent" },
+        { id: "kb", label: "База знаний", icon: "kb" },
+        { id: "contacts", label: "Контакты", icon: "contacts" },
+        { id: "funnels", label: "Воронки", icon: "funnel" },
+        { id: "dialogues", label: "Диалоги", icon: "chat" },
+        { id: "crm", label: "CRM", icon: "crm" },
+        { id: "analytics", label: "Аналитика", icon: "analytics" },
+        { id: "autopilot", label: "Автопилот", icon: "autopilot" },
+        { id: "settings", label: "Настройки", icon: "settings" },
       ];
 
-      function VIKIUserApp() {
+      function App(){
         const [tab, setTab] = useState("projects");
         const [projects, setProjects] = useState(MOCK_PROJECTS);
         const [wizard, setWizard] = useState(false);
-        const currentProject = useMemo(() => projects[0], [projects]);
+        const currentProject = useMemo(()=> projects[0], [projects]);
 
-        function handleToggleProject(p) {
-          setProjects(prev =>
-            prev.map(x => x.id === p.id ? { ...x, status: x.status === "active" ? "paused" : "active" } : x)
-          );
+        function handleToggleProject(p){
+          setProjects(prev => prev.map(x => x.id === p.id ? { ...x, status: x.status === 'active' ? 'paused' : 'active' } : x));
         }
 
-        function Content() {
-          switch (tab) {
-            case "projects":
+        function Content(){
+          switch(tab){
+            case 'projects':
+              return <ProjectsView projects={projects} onOpenWizard={()=>setWizard(true)} onToggleProject={handleToggleProject} onOpenProject={()=>{}}/>;
             default:
-              return (
-                <ProjectsView
-                  projects={projects}
-                  onOpenWizard={() => setWizard(true)}
-                  onToggleProject={handleToggleProject}
-                />
-              );
+              return <KnowledgeView/>;
           }
         }
 
         return (
-          <>
+          <div>
             {/* Top bar */}
             <header className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur border-b border-slate-800">
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 grid place-content-center text-white shadow-lg shadow-indigo-600/30">
-                    <Icon name="logo" className="w-4 h-4"/>
-                  </div>
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 grid place-content-center text-white shadow-lg shadow-indigo-600/30"><Icon name="logo" className="w-4 h-4"/></div>
                   <div>
                     <div className="font-semibold">VIKI</div>
                     <div className="text-xs text-slate-400">Telegram-native AI Platform</div>
@@ -386,75 +282,63 @@
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm">Помощь</Button>
-                  <Button size="sm" onClick={() => setWizard(true)}>Создать проект</Button>
+                  <Button size="sm" onClick={()=>setWizard(true)}>Создать проект</Button>
                 </div>
               </div>
             </header>
 
-            {/* Основная раскладка: слева меню (sticky), справа контент в карточке */}
+            {/* Main layout: LEFT menu column (sticky) | RIGHT card with interface */}
             <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px,1fr] gap-6">
               {/* Sidebar */}
-              <aside className="lg:sticky lg:top-[72px] h-max">
+              <aside className="lg:sticky lg:top-[68px] h-max">
                 <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">Меню</div>
                 <nav className="rounded-2xl border border-slate-800 bg-slate-900/70 p-2">
-                  {NAV.map((n) => (
-                    <button
-                      key={n.id}
-                      onClick={() => setTab(n.id)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors
-                        ${tab === n.id
-                          ? "bg-indigo-600/90 text-white shadow-inner"
-                          : "text-slate-200 hover:bg-slate-800"}`}
-                    >
-                      <Icon name={n.icon} className="w-4 h-4" />
+                  {NAV.map((n)=> (
+                    <button key={n.id} onClick={()=>setTab(n.id)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-slate-800 transition-colors ${tab===n.id?"bg-indigo-600/90 text-white hover:bg-indigo-600/90 shadow-inner": "text-slate-200"}`}>
+                      <Icon name={n.icon} className="w-4 h-4"/>
                       {n.label}
                     </button>
                   ))}
                 </nav>
               </aside>
 
-              {/* Content */}
-              <main aria-label="Интерфейс пользователя VIKI">
-                <Card
-                  title={NAV.find(n => n.id === tab)?.label}
-                  subtitle="Интерфейс пользователя VIKI"
-                >
+              {/* Right: single card wrapping the interface */}
+              <main>
+                <Card title="Интерфейс пользователя VIKI" subtitle="Рабочая область">
                   <Content />
                 </Card>
               </main>
             </div>
 
-            {/* Панель активного проекта внизу страницы */}
-            <ActiveProjectPanel project={currentProject} />
-          </>
+            {/* Active project — moved to very bottom, full width */}
+            <section className="max-w-7xl mx-auto px-4 pb-10">
+              <Card title="Активный проект" subtitle="Сводка" >
+                <div className="text-sm text-slate-300 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div><div className="text-slate-500">Название</div><div className="font-medium text-slate-100">{currentProject?.name}</div></div>
+                  <div><div className="text-slate-500">Контактная база</div><div className="font-mono">{currentProject?.activeContactBaseId}</div></div>
+                  <div className="flex items-center gap-2"><div className="text-slate-500">Статус</div><Badge color={currentProject?.status === 'active' ? 'green' : 'yellow'}>{currentProject?.status}</Badge></div>
+                </div>
+              </Card>
+            </section>
+
+            {/* Footer */}
+            <footer className="border-t border-slate-800">
+              <div className="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-500 flex items-center justify-between">
+                <div>© {new Date().getFullYear()} VIKI.ai — Все права защищены</div>
+                <div className="flex items-center gap-2">
+                  <Badge>Antiban</Badge>
+                  <Badge>Throttle</Badge>
+                  <Badge>Fallback</Badge>
+                  <Badge>Audit</Badge>
+                </div>
+              </div>
+            </footer>
+          </div>
         );
       }
 
-      // ---------------- Mount ----------------
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<VIKIUserApp />);
-
-      // ---------------- Smoke tests (консоль) ----------------
-      (function runSmokeTests() {
-        try {
-          const sidebar = document.querySelector("aside nav");
-          const mainCardTitle = Array.from(document.querySelectorAll("h3")).find(h => h.textContent.trim().length);
-          const grid = document.querySelector("div.max-w-7xl.mx-auto.px-4.py-6.grid");
-
-          console.log("[SMOKE] sidebar exists:", !!sidebar);
-          console.log("[SMOKE] main card title:", mainCardTitle?.textContent || "<none>");
-          console.log("[SMOKE] grid layout classes:", grid?.className || "<none>");
-
-          if (!sidebar) throw new Error("Sidebar not rendered");
-          if (!grid?.className.includes("lg:grid-cols-[260px,1fr]")) {
-            throw new Error("Grid columns do not match expected layout");
-          }
-          console.log("%cAll smoke tests passed", "color: #10b981");
-        } catch (e) {
-          console.error("[SMOKE] failed:", e);
-        }
-      })();
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App/>);
     </script>
   </body>
 </html>
-
